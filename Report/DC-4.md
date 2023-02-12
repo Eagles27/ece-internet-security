@@ -3,7 +3,7 @@
 ## Credit
 
 - **Maxime GILLEN**
-  - **Mail:** [maxime.gillen@edu.fr](mailto:maxime.gillen@edu.ece.fr)
+  - **Mail:** [maxime.gillen@edu.ece.fr](mailto:maxime.gillen@edu.ece.fr)
 
 ## Nmap Scan
 
