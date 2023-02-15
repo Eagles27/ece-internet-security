@@ -4,10 +4,12 @@
 
 - **Maxime GILLEN**
   - **Mail:** [maxime.gillen@edu.ece.fr](mailto:maxime.gillen@edu.ece.fr)
+- **Romain DELAYRE**
+  - **Mail:** [romain.delayre@edu.ece.fr](mailto:romain.delayre@edu.ece.fr)
 
 ## Nmap Scan
 
-> The IP address of the target is **10.0.2.4**
+> The IP address of the target is **10.0.2.5**
 
 ### Command
 
@@ -52,13 +54,19 @@ We will use **Burp** to BruteForce the login page.
 
 ### BruteForce
 
-Firstly we suppose than the login is **admin** and we will use the wordlist given in the subject to find the password.
+Firstly we suppose than the login is **admin** and we will use the wordlist given.
 
 For the password **happy** we have a different response length than the others, so we can suppose that it's the good one.
 
 > So we can try to login with the credentials **admin:happy** and we have a successfull login.
 
-## Find a way to get a shell
+#### Criticity 
+
+![Criticite-VF](https://user-images.githubusercontent.com/92862523/219007334-273eb975-da6f-4ee5-8ef5-406d1ae43a4b.jpg)
+
+**How to fix**: Update password policies (min 8characters, 1 Special, 1 Capital Letter, 1 number).  
+
+### Finding a way to get a shell
 
 When we are logged in, we can see that we are on the page **/command.php**. By using for example the repeater of Burp, we can see that the page is vulnerable to **Command Injection**.
 
@@ -89,6 +97,17 @@ The goal is to obtain the list of users on the server. To do it we have 2 method
 
 - `cat /etc/passwd` to get the list of users. And we can see that we have 3 users **charles**, **jim** and **sam**.
 
+#### Criticity 
+
+![Criticite-VF](https://user-images.githubusercontent.com/92862523/219007656-2fd9f363-18cf-4250-98d5-427f759b7ef8.jpg)
+
+**How to fix:** 
+- Validating against a whitelist of permitted values.
+- Validating that the input is a number.
+- Validating that the input contains only alphanumeric characters, no other syntax or whitespace. 
+
+- If the command page is not crucial to the operation, we advice you to remove it. 
+
 ## Find a clue to establish a ssh connection
 
 By examining the home directory of the user **jim** we can see that we backup directory and inside we have a file which contain a list of potential passwords.
@@ -111,7 +130,16 @@ hydra -l jim -P wodlistjim.txt -t 4  10.0.2.4  ssh -V
 
 > So we can try to login with the credentials **jim:jibril04** and we have a successfull login.
 
-## Find a way to escalate privileges
+#### Criticity 
+
+![Criticite-VF](https://user-images.githubusercontent.com/92862523/219008882-16744fba-039e-4646-a3a6-93be1804364c.jpg)
+
+**How to fix:** 
+
+- Sensibilise your employees about the risk to store passwords logs into a file. 
+- Create groups with different privileges to isolate different users. 
+
+## Finding a way to escalate privileges
 
 ### Connect to the server with ssh
 
@@ -123,7 +151,7 @@ ssh jim@10.0.2.4 -p 22
 
 > We successfully connect to the server with the user **jim**.
 
-### Find a way to escalate privileges
+### Finding a way to escalate privileges
 
 ### LinEnum
 
@@ -150,17 +178,23 @@ chmod +x LinEnum.sh // To make the file executable
 ./LinEnum.sh // To execute the file
 ```
 
-/bin/nc
-/bin/netcat
-/usr/bin/wget
-/usr/bin/gcc
+### Interesting mail 
 
+#### Command to get acces to Jim Mail
+
+```bash
 cat /var/mail/jim
+```
 
-Charles password
-^xHhA&hvim0y
 
-### Charle report LinEnum
+<img width="806" alt="Capture d’écran 2023-02-15 120502" src="https://user-images.githubusercontent.com/92862523/219010586-248f541b-d6c8-4c99-8cb8-1e7a344f5a82.png">
+
+> We found Charles credentials: **charles:^xHhA&hvim0y**
+
+**How to fix:** 
+- Sensibilise your employees about the risk to share password in mails. 
+
+## Charle report LinEnum
 
 ```bash
 [+] We can sudo without supplying a password!
@@ -171,7 +205,7 @@ User charles may run the following commands on dc-4:
     (root) NOPASSWD: /usr/bin/teehee
 ```
 
-## Use the function teehee to escalate privileges
+## Using the function teehee to escalate privileges
 
 By analyzing what the function teehee do, we can see that we can append commands into a file as root.
 So the main goal is to append a new user as root into the file **/etc/passwd**.
@@ -207,6 +241,13 @@ su eagles
 ```
 
 > We successfully are root of the machine.
+
+#### Criticity
+
+![Capture d’écran 2023-02-15 120502](https://user-images.githubusercontent.com/92862523/219012207-0ead627f-7681-40f5-8c44-793f7079d099.png)
+
+**How to fix:** 
+- Review the sudo acces of the function **teehee**, you should restrict the access of the app to only root group.  
 
 ### Command to get the flag
 
